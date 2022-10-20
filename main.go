@@ -1,6 +1,7 @@
 package main
 
 import (
+	"custom-scheduler/plugins"
 	"fmt"
 	"k8s.io/component-base/logs"
 	"k8s.io/kubernetes/cmd/kube-scheduler/app"
@@ -13,7 +14,7 @@ func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	command := app.NewSchedulerCommand(
-		app.WithPlugin(sample.Name, sample.New),
+		app.WithPlugin(plugins.Name, plugins.New),
 	)
 
 	logs.InitLogs()
