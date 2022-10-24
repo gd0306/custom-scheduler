@@ -4,6 +4,7 @@ import (
 	"custom-scheduler/plugins"
 	"fmt"
 	"k8s.io/component-base/logs"
+	"k8s.io/klog/v2"
 	"k8s.io/kubernetes/cmd/kube-scheduler/app"
 	"math/rand"
 	"os"
@@ -13,6 +14,7 @@ import (
 func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
 
+	klog.Infof("start custom scheduler...")
 	command := app.NewSchedulerCommand(
 		app.WithPlugin(plugins.Name, plugins.New),
 	)
