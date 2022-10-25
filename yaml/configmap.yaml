@@ -1,0 +1,30 @@
+apiVersion: v1
+data:
+  custom-scheduler-config.yaml: |
+    apiVersion: kubescheduler.config.k8s.io/v1alpha1
+    kind: KubeSchedulerConfiguration
+    leaderElection:
+      leaderElect: true
+      resourceName: custom-scheduler
+      resourceNamespace: kube-system
+    profiles:
+      - schedulerName: custom-scheduler
+        plugins:
+          preFilter:
+            enabled:
+            - name: "custom-plugin"
+          filter:
+            enabled:
+            - name: "custom-plugin"
+          preBind:
+            enabled:
+            - name: "custom-plugin"
+        pluginConfig:
+          - name: "custom-plugin"
+            args:
+              web_app_count: 3
+              same_app_count: 2
+kind: ConfigMap
+metadata:
+  name: custom-scheduler-config
+  namespace: kube-system

@@ -13,7 +13,6 @@ import (
 
 func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
-
 	klog.Infof("start custom scheduler...")
 	command := app.NewSchedulerCommand(
 		app.WithPlugin(plugins.Name, plugins.New),
@@ -26,5 +25,4 @@ func main() {
 		_, _ = fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
 	}
-
 }
