@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: custom-scheduler
+  labels:
+    app: custom-scheduler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: custom-scheduler
+  template:
+    metadata:
+      labels:
+        app: custom-scheduler
+    spec:
+      containers:
+        - args:
+            - custom-scheduler
+            - --config=/etc/kubernetes/custom-scheduler-config.yaml
+            - --v=3
+          name: custom-scheduler
+          image: gd306.cn/kubernetes/custom-scheduler:0.0.1
+          imagePullPolicy: IfNotPresent
+          resources: {}
+          volumeMounts:
+            - mountPath: /etc/kubernetes
+              name: custom-scheduler-config
+      dnsPolicy: ClusterFirst
+      serviceAccount: custom-scheduler-sa
+      volumes:
+        - configMap:
+            defaultMode: 420
+            name: custom-scheduler-config
+          name: custom-scheduler-config
