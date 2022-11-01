@@ -10,7 +10,8 @@ NAME=custom-scheduler
 # GO LOCAL RUNTIME
 GO=$GOROOT/bin/go
 # SET LOCAL WORK DIRECTORY
-WORK_DIR=$GOPATH/src/custom-scheduler
+WORK_DIR=$(dirname "$0")
+WORK_DIR=$(dirname "$WORK_DIR")
 
 # BUILD BINARY FILE
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $GO build -o "$WORK_DIR"/$NAME "$WORK_DIR"/main.go
@@ -20,5 +21,9 @@ if [ $? != 0 ];then
 fi
 
 # BUILD DOCKER IMAGES （eg: custom-scheduler:0.0.1）
-docker build --no-cache -t $NAME:$VERSION -f "$WORK_DIR"/Dockerfile .
+docker build --no-cache -t $NAME:$VERSION -f ./Dockerfile .
 docker tag $NAME:$VERSION gd306.cn/kubernetes/$NAME:$VERSION
+
+# CLEAN BINARY FILE
+echo "clean binary file..."
+$GO clean

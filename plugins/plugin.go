@@ -2,6 +2,8 @@ package plugins
 
 import (
 	"context"
+	"custom-scheduler/kinds"
+	"custom-scheduler/stradegy/metrics"
 	"fmt"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -13,13 +15,8 @@ import (
 // Name 插件名称
 const Name = "custom-plugin"
 
-type Args struct {
-	SameAppCount int `json:"same_app_count"`
-	WebAppCount  int `json:"web_app_count"`
-}
-
 type Custom struct {
-	args   *Args
+	args   *kinds.Args
 	handle framework.Handle
 }
 
@@ -39,7 +36,13 @@ func (c *Custom) PreFilterExtensions() framework.PreFilterExtensions {
 
 func (c *Custom) Filter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeInfo *framework.NodeInfo) *framework.Status {
 	klog.Infof("filter pod: %v, node: %v", pod.Name, nodeInfo.Node().Name)
-	
+
+	m := metrics.NewMetricsStradegy(c.args, c.handle, pod, nodeInfo)
+	status, schedulable := m.ScheduleByNodeRequests()
+	if schedulable == false {
+		return status
+	}
+
 	sameAppCount := 0
 	for _, pods := range nodeInfo.Pods {
 		if pods.Pod.Labels["app"] == pod.Labels["app"] {
@@ -58,13 +61,13 @@ func (c *Custom) PreBind(ctx context.Context, state *framework.CycleState, pod *
 	if nodeInfo, err := c.handle.SnapshotSharedLister().NodeInfos().Get(nodeName); err != nil {
 		return framework.NewStatus(framework.Error, fmt.Sprintf("prebind get node info error: %+v", nodeName))
 	} else {
-		klog.Infof("prebind node info: %+v", nodeInfo.Node())
+		klog.Infof("prebind node info: %+v", nodeInfo.Node().Name)
 		return framework.NewStatus(framework.Success, "")
 	}
 }
 
 func New(config runtime.Object, f framework.Handle) (framework.Plugin, error) {
-	args := &Args{}
+	args := &kinds.Args{}
 	if err := runtime2.DecodeInto(config, args); err != nil {
 		klog.Errorf(err.Error())
 	}
