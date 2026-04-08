@@ -30,8 +30,7 @@ func (c *Custom) PreFilter(ctx context.Context, state *framework.CycleState, p *
 }
 
 func (c *Custom) PreFilterExtensions() framework.PreFilterExtensions {
-	//TODO implement me
-	panic("implement me")
+	return nil
 }
 
 func (c *Custom) Filter(ctx context.Context, state *framework.CycleState, pod *v1.Pod, nodeInfo *framework.NodeInfo) *framework.Status {
@@ -39,7 +38,7 @@ func (c *Custom) Filter(ctx context.Context, state *framework.CycleState, pod *v
 
 	m := metrics.NewMetricsStradegy(c.args, c.handle, pod, nodeInfo)
 	status, schedulable := m.ScheduleByNodeRequests()
-	if schedulable == false {
+	if !schedulable {
 		return status
 	}
 

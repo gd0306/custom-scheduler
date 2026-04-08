@@ -23,8 +23,8 @@ type Metrics struct {
 
 // MetricsConfig {"kind":"NodeMetrics","apiVersion":"metrics.k8s.io/v1beta1","metadata":{"name":"docker-desktop","creationTimestamp":"2022-10-31T10:09:00Z","labels":{"beta.kubernetes.io/arch":"amd64","beta.kubernetes.io/os":"linux","kubernetes.io/arch":"amd64","kubernetes.io/hostname":"docker-desktop","kubernetes.io/os":"linux","node-role.kubernetes.io/control-plane":"","node.kubernetes.io/exclude-from-external-load-balancers":""}},"timestamp":"2022-10-31T10:08:48Z","window":"12.255s","usage":{"cpu":"339779681n","memory":"1776008Ki"}}
 type MetricsConfig struct {
-	Kinds       string                 `json:"kinds"`
-	ApiVersions string                 `json:"apiVersions"`
+	Kind        string                 `json:"kind"`
+	ApiVersion  string                 `json:"apiVersion"`
 	MetaData    map[string]interface{} `json:"metadata"`
 	TimeStamp   string                 `json:"timestamp"`
 	Window      string                 `json:"window"`
@@ -36,7 +36,7 @@ func NewMetricsStradegy(args *kinds.Args, handle framework.Handle, pod *v1.Pod, 
 }
 
 func (m *Metrics) ScheduleByNodeRequests() (*framework.Status, bool) {
-	cli, err := pkg.InitClientSet("http://docker.for.mac.host.internal:54030", "")
+	cli, err := pkg.InitClientSet("", "")
 	if err != nil {
 		return framework.NewStatus(framework.Unschedulable, "connect kubernetes cluster failed!"), false
 	}
@@ -46,7 +46,11 @@ func (m *Metrics) ScheduleByNodeRequests() (*framework.Status, bool) {
 	requestUri := fmt.Sprintf("/apis/metrics.k8s.io/v1beta1/nodes/%v", m.nodeInfo.Node().Name)
 	var mc MetricsConfig
 	currentRequest := cli.RESTClient().Get().RequestURI(requestUri).Do(ctx)
-	requestRaw, _ := currentRequest.Raw()
+	requestRaw, err := currentRequest.Raw()
+	if err != nil {
+		klog.Errorf("failed to get node metrics: %v", err)
+		return framework.NewStatus(framework.Unschedulable, "failed to get node metrics"), false
+	}
 	err = json.Unmarshal(requestRaw, &mc)
 	if err != nil {
 		klog.Error(err)
