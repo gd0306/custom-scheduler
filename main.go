@@ -13,13 +13,13 @@ import (
 
 func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
+	logs.InitLogs()
+	defer logs.FlushLogs()
+
 	klog.Infof("start custom scheduler...")
 	command := app.NewSchedulerCommand(
 		app.WithPlugin(plugins.Name, plugins.New),
 	)
-
-	logs.InitLogs()
-	defer logs.FlushLogs()
 
 	if err := command.Execute(); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "%v\n", err)
